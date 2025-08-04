@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zomato Sentiment Analyzer</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ Zomato Sentiment Analyzer</h1>
+            <p>Analyze restaurant review sentiments</p>
+        </header>
+
+        <div class="controls">
+            <button id="analyzeBtn" class="analyze-btn">
+                🔍 Analyze Reviews
+            </button>
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Analyzing reviews...</span>
+            </div>
+        </div>
+
+        <div id="results" class="results hidden">
+            <div class="summary">
+                <h2>📊 Analysis Summary</h2>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="label">Average Sentiment:</span>
+                        <span id="avgSentiment" class="value"></span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Average Score:</span>
+                        <span id="avgScore" class="value"></span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Reviews Analyzed:</span>
+                        <span id="totalReviews" class="value"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlights">
+                <div class="highlight positive">
+                    <h3>😊 Most Positive Review</h3>
+                    <div id="mostPositive" class="review-text"></div>
+                    <div class="score">Score: <span id="mostPositiveScore"></span></div>
+                </div>
+
+                <div class="highlight negative">
+                    <h3>😞 Least Positive Review</h3>
+                    <div id="leastPositive" class="review-text"></div>
+                    <div class="score">Score: <span id="leastPositiveScore"></span></div>
+                </div>
+            </div>
+
+            <div class="all-reviews">
+                <h3>📝 All Analyzed Reviews</h3>
+                <div id="reviewsList" class="reviews-list"></div>
+            </div>
+        </div>
+
+        <div id="error" class="error hidden">
+            <h3>❌ Error</h3>
+            <p id="errorMessage"></p>
+        </div>
+
+        <div id="noReviews" class="no-reviews hidden">
+            <h3>🔍 No Reviews Found</h3>
+            <p>Please navigate to a Zomato restaurant page to analyze reviews.</p>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html> 

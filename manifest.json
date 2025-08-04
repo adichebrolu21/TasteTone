@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Zomato Review Sentiment Analyzer",
+  "version": "1.0",
+  "description": "Analyzes sentiment of Zomato restaurant reviews",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.zomato.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.zomato.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Zomato Sentiment Analyzer"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+} 
