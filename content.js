@@ -14,6 +14,19 @@ class ZomatoReviewAnalyzer {
         } else {
             this.setup();
         }
+        
+        // Also listen for navigation changes (for SPA)
+        let currentUrl = window.location.href;
+        const checkUrlChange = () => {
+            if (window.location.href !== currentUrl) {
+                currentUrl = window.location.href;
+                console.log('URL changed, re-initializing...');
+                setTimeout(() => this.setup(), 1000);
+            }
+        };
+        
+        // Check for URL changes every 2 seconds
+        setInterval(checkUrlChange, 2000);
     }
 
     setup() {
@@ -43,21 +56,10 @@ class ZomatoReviewAnalyzer {
     addAnalyzeButton() {
         // Check if we're on a Zomato page (very flexible detection)
         const isZomatoPage = window.location.href.includes('zomato.com');
-        const isRestaurantPage = window.location.href.includes('/restaurants/') || 
-                                window.location.href.includes('/restaurant/') ||
-                                window.location.href.includes('/place/') ||
-                                window.location.href.includes('/dining/') ||
-                                window.location.href.includes('/food/') ||
-                                window.location.href.includes('/menu/') ||
-                                window.location.href.includes('/order/') ||
-                                window.location.href.includes('/reviews/') ||
-                                window.location.href.includes('/photos/') ||
-                                window.location.href.includes('/info/');
         
         console.log('URL check:', {
             url: window.location.href,
-            isZomato: isZomatoPage,
-            isRestaurant: isRestaurantPage
+            isZomato: isZomatoPage
         });
 
         // Add button to any Zomato page
@@ -66,38 +68,57 @@ class ZomatoReviewAnalyzer {
             return;
         }
 
+        // Remove existing button if any
+        const existingButton = document.getElementById('sentiment-analyze-btn');
+        if (existingButton) {
+            existingButton.remove();
+        }
+
         // Create analyze button
         const button = document.createElement('button');
         button.id = 'sentiment-analyze-btn';
         button.textContent = '🔍 Analyze Reviews';
         button.className = 'sentiment-analyze-button';
+        button.style.cssText = `
+            position: fixed !important;
+            top: 20px !important;
+            right: 20px !important;
+            z-index: 10000 !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border: none !important;
+            padding: 10px 20px !important;
+            border-radius: 25px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+            transition: all 0.3s ease !important;
+        `;
+        
         button.addEventListener('click', () => this.analyzeReviewsAndDisplay());
+        button.addEventListener('mouseenter', () => {
+            button.style.transform = 'translateY(-2px)';
+            button.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
+        });
+        button.addEventListener('mouseleave', () => {
+            button.style.transform = 'translateY(0)';
+            button.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+        });
 
-        // Try multiple insertion points
-        const insertionPoints = [
-            document.querySelector('header'),
-            document.querySelector('.header'),
-            document.querySelector('[data-testid="header"]'),
-            document.querySelector('.nav'),
-            document.querySelector('.navigation'),
-            document.querySelector('nav'),
-            document.querySelector('.main-header'),
-            document.querySelector('.restaurant-header'),
-            document.querySelector('.page-header'),
-            document.body
-        ];
-
-        for (const point of insertionPoints) {
-            if (point) {
-                point.appendChild(button);
-                console.log('Button added to:', point.tagName || point.className);
-                break;
-            }
-        }
+        // Add to body for guaranteed placement
+        document.body.appendChild(button);
+        console.log('Analyze button added to page');
     }
 
     async scrapeReviews() {
         const reviews = [];
+        
+        console.log('Starting review scraping...');
+        console.log('Current URL:', window.location.href);
+        
+        // Wait a bit for dynamic content to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // More comprehensive selectors for Zomato reviews
         const reviewSelectors = [
@@ -134,7 +155,23 @@ class ZomatoReviewAnalyzer {
             '.review-user-full-text',
             '.review-user-snippet',
             '.review-user-excerpt',
-            '.review-user-paragraph'
+            '.review-user-paragraph',
+            // Additional selectors for modern Zomato
+            '[data-testid="review"]',
+            '[data-testid="user-review-text"]',
+            '[data-testid="review-text-content"]',
+            '.review-text-content',
+            '.user-review-text-content',
+            '.review-description-text',
+            '.review-body-text',
+            '.review-message-text',
+            '.review-comment-text',
+            '.review-detail-text',
+            '.review-summary-text',
+            '.review-full-text-content',
+            '.review-snippet-text',
+            '.review-excerpt-text',
+            '.review-paragraph-text'
         ];
 
         let reviewElements = [];
@@ -156,65 +193,85 @@ class ZomatoReviewAnalyzer {
             const allElements = document.querySelectorAll('*');
             reviewElements = Array.from(allElements).filter(el => {
                 const text = el.textContent.trim();
-                const hasReviewKeywords = text.includes('food') || text.includes('service') || 
-                                        text.includes('restaurant') || text.includes('delicious') ||
-                                        text.includes('tasty') || text.includes('good') || 
-                                        text.includes('bad') || text.includes('great') ||
-                                        text.includes('amazing') || text.includes('terrible') ||
-                                        text.includes('love') || text.includes('hate') ||
-                                        text.includes('recommend') || text.includes('avoid') ||
-                                        text.includes('experience') || text.includes('quality') ||
-                                        text.includes('taste') || text.includes('atmosphere') ||
-                                        text.includes('staff') || text.includes('wait') ||
-                                        text.includes('price') || text.includes('value') ||
-                                        text.includes('dish') || text.includes('meal') ||
-                                        text.includes('cuisine') || text.includes('flavor') ||
-                                        text.includes('portion') || text.includes('ambiance') ||
-                                        text.includes('service') || text.includes('delivery') ||
-                                        text.includes('takeaway') || text.includes('dine-in');
                 
-                const hasReasonableLength = text.length > 30 && text.length < 1000;
-                const hasMultipleWords = text.split(' ').length > 5;
+                // More comprehensive review keywords
+                const reviewKeywords = [
+                    'food', 'service', 'restaurant', 'delicious', 'tasty', 'good', 'bad', 'great',
+                    'amazing', 'terrible', 'love', 'hate', 'recommend', 'avoid', 'experience',
+                    'quality', 'taste', 'atmosphere', 'staff', 'wait', 'price', 'value', 'dish',
+                    'meal', 'cuisine', 'flavor', 'portion', 'ambiance', 'delivery', 'takeaway',
+                    'dine-in', 'excellent', 'outstanding', 'fantastic', 'brilliant', 'superb',
+                    'incredible', 'wonderful', 'yummy', 'enjoy', 'satisfied', 'best', 'awesome',
+                    'nice', 'pleasant', 'fresh', 'hot', 'crispy', 'juicy', 'flavorful', 'aromatic',
+                    'authentic', 'traditional', 'homemade', 'generous', 'reasonable', 'affordable',
+                    'worth', 'premium', 'awful', 'horrible', 'disgusting', 'worst', 'disappointed',
+                    'poor', 'mediocre', 'bland', 'cold', 'overcooked', 'undercooked', 'expensive',
+                    'waste', 'never', 'dry', 'soggy', 'burnt', 'tasteless', 'flavorless', 'greasy',
+                    'oily', 'salty', 'spicy', 'slow', 'rude', 'unfriendly', 'dirty', 'noisy',
+                    'crowded', 'small', 'overpriced'
+                ];
+                
+                const hasReviewKeywords = reviewKeywords.some(keyword => text.toLowerCase().includes(keyword));
+                const hasReasonableLength = text.length > 20 && text.length < 2000;
+                const hasMultipleWords = text.split(' ').length > 3;
                 const isNotNavigation = !el.closest('nav') && !el.closest('header') && !el.closest('footer');
-                const isNotButton = !el.tagName || !['BUTTON', 'A', 'INPUT'].includes(el.tagName);
+                const isNotButton = !el.tagName || !['BUTTON', 'A', 'INPUT', 'SELECT', 'OPTION'].includes(el.tagName);
                 const isNotScript = !el.closest('script') && !el.closest('style');
+                const isNotHidden = el.offsetHeight > 0 && el.offsetWidth > 0;
+                const isNotExtension = !el.id || !el.id.includes('sentiment-');
                 
-                return hasReviewKeywords && hasReasonableLength && hasMultipleWords && isNotNavigation && isNotButton && isNotScript;
+                return hasReviewKeywords && hasReasonableLength && hasMultipleWords && 
+                       isNotNavigation && isNotButton && isNotScript && isNotHidden && isNotExtension;
             });
             
             console.log(`Found ${reviewElements.length} potential review elements`);
         }
 
-        // If still no reviews found, try one more time after a short delay (for dynamic content)
+        // If still no reviews found, try one more time after a longer delay
         if (reviewElements.length === 0) {
-            console.log('No reviews found, waiting for dynamic content to load...');
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+            console.log('No reviews found, waiting longer for dynamic content to load...');
+            await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
             
-            // Try the search again
+            // Try the search again with even broader criteria
             const allElements = document.querySelectorAll('*');
             reviewElements = Array.from(allElements).filter(el => {
                 const text = el.textContent.trim();
-                const hasReviewKeywords = text.includes('food') || text.includes('service') || 
-                                        text.includes('restaurant') || text.includes('delicious') ||
-                                        text.includes('tasty') || text.includes('good') || 
-                                        text.includes('bad') || text.includes('great') ||
-                                        text.includes('amazing') || text.includes('terrible') ||
-                                        text.includes('love') || text.includes('hate') ||
-                                        text.includes('recommend') || text.includes('avoid') ||
-                                        text.includes('experience') || text.includes('quality') ||
-                                        text.includes('taste') || text.includes('atmosphere') ||
-                                        text.includes('staff') || text.includes('wait') ||
-                                        text.includes('price') || text.includes('value');
                 
-                const hasReasonableLength = text.length > 30 && text.length < 1000;
-                const hasMultipleWords = text.split(' ').length > 5;
+                // Even broader keywords
+                const broadKeywords = [
+                    'food', 'service', 'restaurant', 'delicious', 'tasty', 'good', 'bad', 'great',
+                    'amazing', 'terrible', 'love', 'hate', 'recommend', 'avoid', 'experience',
+                    'quality', 'taste', 'atmosphere', 'staff', 'wait', 'price', 'value', 'dish',
+                    'meal', 'cuisine', 'flavor', 'portion', 'ambiance', 'delivery', 'takeaway',
+                    'dine-in', 'excellent', 'outstanding', 'fantastic', 'brilliant', 'superb',
+                    'incredible', 'wonderful', 'yummy', 'enjoy', 'satisfied', 'best', 'awesome',
+                    'nice', 'pleasant', 'fresh', 'hot', 'crispy', 'juicy', 'flavorful', 'aromatic',
+                    'authentic', 'traditional', 'homemade', 'generous', 'reasonable', 'affordable',
+                    'worth', 'premium', 'awful', 'horrible', 'disgusting', 'worst', 'disappointed',
+                    'poor', 'mediocre', 'bland', 'cold', 'overcooked', 'undercooked', 'expensive',
+                    'waste', 'never', 'dry', 'soggy', 'burnt', 'tasteless', 'flavorless', 'greasy',
+                    'oily', 'salty', 'spicy', 'slow', 'rude', 'unfriendly', 'dirty', 'noisy',
+                    'crowded', 'small', 'overpriced', 'like', 'dislike', 'enjoyed', 'hated',
+                    'loved', 'enjoyable', 'disappointing', 'satisfying', 'unsatisfying', 'perfect',
+                    'imperfect', 'wonderful', 'awful', 'fantastic', 'terrible', 'amazing', 'horrible',
+                    'incredible', 'disgusting', 'outstanding', 'poor', 'excellent', 'mediocre',
+                    'superb', 'awful', 'brilliant', 'terrible', 'fantastic', 'horrible'
+                ];
+                
+                const hasReviewKeywords = broadKeywords.some(keyword => text.toLowerCase().includes(keyword));
+                const hasReasonableLength = text.length > 15 && text.length < 3000;
+                const hasMultipleWords = text.split(' ').length > 2;
                 const isNotNavigation = !el.closest('nav') && !el.closest('header') && !el.closest('footer');
-                const isNotButton = !el.tagName || !['BUTTON', 'A', 'INPUT'].includes(el.tagName);
+                const isNotButton = !el.tagName || !['BUTTON', 'A', 'INPUT', 'SELECT', 'OPTION'].includes(el.tagName);
+                const isNotScript = !el.closest('script') && !el.closest('style');
+                const isNotHidden = el.offsetHeight > 0 && el.offsetWidth > 0;
+                const isNotExtension = !el.id || !el.id.includes('sentiment-');
                 
-                return hasReviewKeywords && hasReasonableLength && hasMultipleWords && isNotNavigation && isNotButton;
+                return hasReviewKeywords && hasReasonableLength && hasMultipleWords && 
+                       isNotNavigation && isNotButton && isNotScript && isNotHidden && isNotExtension;
             });
             
-            console.log(`After retry: Found ${reviewElements.length} potential review elements`);
+            console.log(`After longer retry: Found ${reviewElements.length} potential review elements`);
         }
 
         // Remove duplicates and filter out very similar texts

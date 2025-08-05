@@ -5,7 +5,8 @@
   "description": "Analyzes sentiment of Zomato restaurant reviews",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://www.zomato.com/*"

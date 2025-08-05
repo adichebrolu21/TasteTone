@@ -1,110 +1,113 @@
 // Popup script for Zomato Sentiment Analyzer
 
-class PopupManager {
-    constructor() {
-        this.init();
-    }
+document.addEventListener('DOMContentLoaded', function() {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loading = document.getElementById('loading');
+    const results = document.getElementById('results');
+    const error = document.getElementById('error');
+    const noReviews = document.getElementById('noReviews');
 
-    init() {
-        this.bindEvents();
-        this.checkCurrentTab();
-    }
+    // Check if we're on a Zomato page when popup opens
+    checkCurrentPage();
 
-    bindEvents() {
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        analyzeBtn.addEventListener('click', () => this.analyzeReviews());
-    }
+    // Add click event to analyze button
+    analyzeBtn.addEventListener('click', async () => {
+        await analyzeReviews();
+    });
 
-    async checkCurrentTab() {
+    async function checkCurrentPage() {
         try {
+            // Get current tab info
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
-            console.log('Current tab URL:', tab.url);
-            
             if (!tab.url.includes('zomato.com')) {
-                this.showMessage('Please navigate to a Zomato page to use this extension.');
+                showNoReviewsMessage('Please navigate to a Zomato restaurant page to analyze reviews.');
                 return;
             }
 
-            // Allow any Zomato page - don't restrict to restaurant pages
-            console.log('On Zomato page, extension ready to use');
-        } catch (error) {
-            console.error('Error checking current tab:', error);
+            if (!tab.url.includes('/restaurants/') && 
+                !tab.url.includes('/restaurant/') && 
+                !tab.url.includes('/place/') && 
+                !tab.url.includes('/dining/') && 
+                !tab.url.includes('/food/') && 
+                !tab.url.includes('/menu/') && 
+                !tab.url.includes('/order/') && 
+                !tab.url.includes('/reviews/') && 
+                !tab.url.includes('/photos/') && 
+                !tab.url.includes('/info/')) {
+                showNoReviewsMessage('Please navigate to a specific restaurant page to analyze reviews.');
+                return;
+            }
+
+            // Page looks good, enable analyze button
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = '🔍 Analyze Reviews';
+
+        } catch (err) {
+            console.error('Error checking current page:', err);
+            showError('Failed to check current page. Please refresh and try again.');
         }
     }
 
-    async analyzeReviews() {
-        this.showLoading();
-        this.hideResults();
-        this.hideError();
-        this.hideNoReviews();
-
+    async function analyzeReviews() {
         try {
+            // Show loading state
+            showLoading();
+            hideResults();
+            hideError();
+            hideNoReviews();
+
+            // Get current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
-            console.log('Analyzing reviews for URL:', tab.url);
-            
-            if (!tab.url.includes('zomato.com')) {
-                this.showError('Please navigate to a Zomato page.');
-                return;
+            if (!tab) {
+                throw new Error('No active tab found');
             }
 
-            // Allow any Zomato page to be analyzed
-            console.log('Attempting to analyze reviews on any Zomato page');
+            // Send message to content script to analyze reviews
+            const response = await chrome.tabs.sendMessage(tab.id, {
+                action: 'analyzeReviews'
+            });
 
-            // Send message to content script
-            const response = await chrome.tabs.sendMessage(tab.id, { action: 'analyzeReviews' });
-            
-            if (response.success) {
-                this.displayResults(response);
-            } else {
-                if (response.error === 'No reviews found on this page') {
-                    this.showNoReviews();
-                } else {
-                    this.showError(response.error || 'Failed to analyze reviews');
-                }
+            if (!response) {
+                throw new Error('No response from content script. Please refresh the page and try again.');
             }
-        } catch (error) {
-            console.error('Error analyzing reviews:', error);
-            this.showError('Failed to analyze reviews. Please make sure you are on a Zomato restaurant page and the page has loaded completely.');
+
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to analyze reviews');
+            }
+
+            // Display results
+            displayResults(response);
+
+        } catch (err) {
+            console.error('Error analyzing reviews:', err);
+            showError(err.message || 'Failed to analyze reviews. Please try again.');
         } finally {
-            this.hideLoading();
+            hideLoading();
         }
     }
 
-    displayResults(data) {
-        // Display summary
-        document.getElementById('avgSentiment').textContent = this.capitalizeFirst(data.averageSentiment);
+    function displayResults(data) {
+        // Update summary
+        document.getElementById('avgSentiment').textContent = capitalizeFirst(data.averageSentiment);
         document.getElementById('avgScore').textContent = data.averageScore.toFixed(3);
         document.getElementById('totalReviews').textContent = data.totalReviews;
 
-        // Display most positive review
+        // Update highlights
         document.getElementById('mostPositive').textContent = data.mostPositive.text;
         document.getElementById('mostPositiveScore').textContent = data.mostPositive.analysis.score.toFixed(3);
-
-        // Display least positive review
         document.getElementById('leastPositive').textContent = data.leastPositive.text;
         document.getElementById('leastPositiveScore').textContent = data.leastPositive.analysis.score.toFixed(3);
 
-        // Display all reviews
-        this.displayAllReviews(data.reviews);
-
-        this.showResults();
-    }
-
-    displayAllReviews(reviews) {
+        // Update all reviews list
         const reviewsList = document.getElementById('reviewsList');
-        reviewsList.innerHTML = '';
-
-        reviews.forEach((review, index) => {
-            const reviewElement = document.createElement('div');
-            reviewElement.className = `review-item ${review.analysis.sentiment}`;
-            
-            reviewElement.innerHTML = `
+        reviewsList.innerHTML = data.reviews.map((review, index) => `
+            <div class="review-item ${review.analysis.sentiment}">
                 <div class="review-header">
                     <span class="review-number">Review ${index + 1}</span>
-                    <span class="sentiment-badge ${review.analysis.sentiment}">
-                        ${this.getSentimentEmoji(review.analysis.sentiment)} ${this.capitalizeFirst(review.analysis.sentiment)}
+                    <span class="badge ${review.analysis.sentiment}">
+                        ${getSentimentEmoji(review.analysis.sentiment)} ${capitalizeFirst(review.analysis.sentiment)}
                     </span>
                 </div>
                 <div class="review-content">${review.text}</div>
@@ -113,71 +116,59 @@ class PopupManager {
                     <span>Positive words: ${review.analysis.positiveWords}</span>
                     <span>Negative words: ${review.analysis.negativeWords}</span>
                 </div>
-            `;
-            
-            reviewsList.appendChild(reviewElement);
-        });
+            </div>
+        `).join('');
+
+        showResults();
     }
 
-    getSentimentEmoji(sentiment) {
+    function showLoading() {
+        loading.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+    }
+
+    function hideLoading() {
+        loading.classList.add('hidden');
+        analyzeBtn.disabled = false;
+    }
+
+    function showResults() {
+        results.classList.remove('hidden');
+    }
+
+    function hideResults() {
+        results.classList.add('hidden');
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        error.classList.remove('hidden');
+    }
+
+    function hideError() {
+        error.classList.add('hidden');
+    }
+
+    function showNoReviewsMessage(message) {
+        document.getElementById('noReviews').querySelector('p').textContent = message;
+        noReviews.classList.remove('hidden');
+        analyzeBtn.disabled = true;
+        analyzeBtn.textContent = '🔍 Analyze Reviews (Disabled)';
+    }
+
+    function hideNoReviews() {
+        noReviews.classList.add('hidden');
+    }
+
+    function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function getSentimentEmoji(sentiment) {
         switch (sentiment) {
             case 'positive': return '😊';
             case 'negative': return '😞';
             default: return '😐';
         }
     }
-
-    capitalizeFirst(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    showLoading() {
-        document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('analyzeBtn').disabled = true;
-    }
-
-    hideLoading() {
-        document.getElementById('loading').classList.add('hidden');
-        document.getElementById('analyzeBtn').disabled = false;
-    }
-
-    showResults() {
-        document.getElementById('results').classList.remove('hidden');
-    }
-
-    hideResults() {
-        document.getElementById('results').classList.add('hidden');
-    }
-
-    showError(message) {
-        document.getElementById('errorMessage').textContent = message;
-        document.getElementById('error').classList.remove('hidden');
-    }
-
-    hideError() {
-        document.getElementById('error').classList.add('hidden');
-    }
-
-    showNoReviews() {
-        document.getElementById('noReviews').classList.remove('hidden');
-    }
-
-    hideNoReviews() {
-        document.getElementById('noReviews').classList.add('hidden');
-    }
-
-    showMessage(message) {
-        // Simple message display
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        messageDiv.textContent = message;
-        document.body.appendChild(messageDiv);
-        
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 3000);
-    }
-}
-
-// Initialize popup
-new PopupManager(); 
+}); 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zomato Extension Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .review {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .positive { border-left: 4px solid #28a745; }
+        .negative { border-left: 4px solid #dc3545; }
+        .neutral { border-left: 4px solid #ffc107; }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Zomato Extension Test Page</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Instructions</h2>
+        <ol>
+            <li>Install the Zomato Sentiment Analyzer extension</li>
+            <li>Navigate to a real Zomato restaurant page</li>
+            <li>Click the extension icon or the "🔍 Analyze Reviews" button</li>
+            <li>Check if the analysis works properly</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Extension Status Check</h2>
+        <div id="extension-status" class="status info">
+            Checking extension status...
+        </div>
+        <button onclick="checkExtension()">Check Extension Status</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📝 Sample Reviews (for testing)</h2>
+        <p>These are sample reviews to test the sentiment analysis algorithm:</p>
+        
+        <div class="review positive">
+            <strong>Positive Review:</strong>
+            "The food here is absolutely delicious! The service was excellent and the atmosphere was wonderful. 
+            I love the authentic flavors and the staff was very friendly. Highly recommend this place!"
+        </div>
+        
+        <div class="review negative">
+            <strong>Negative Review:</strong>
+            "Terrible experience! The food was cold and tasteless. Service was slow and the staff was rude. 
+            The restaurant was dirty and noisy. I would never recommend this place to anyone."
+        </div>
+        
+        <div class="review neutral">
+            <strong>Neutral Review:</strong>
+            "The food was okay, nothing special. Service was average and the prices were reasonable. 
+            The atmosphere was fine but nothing memorable. It's an average restaurant."
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 Debug Information</h2>
+        <div id="debug-info">
+            <p><strong>Current URL:</strong> <span id="current-url"></span></p>
+            <p><strong>Is Zomato Page:</strong> <span id="is-zomato"></span></p>
+            <p><strong>Extension Button Present:</strong> <span id="button-present"></span></p>
+        </div>
+        <button onclick="updateDebugInfo()">Update Debug Info</button>
+    </div>
+
+    <div class="test-section">
+        <h2>❓ Common Issues & Solutions</h2>
+        <ul>
+            <li><strong>Extension not working:</strong> Check browser console (F12) for errors</li>
+            <li><strong>Button not appearing:</strong> Refresh the page after installing extension</li>
+            <li><strong>No reviews found:</strong> Make sure you're on a restaurant page with reviews</li>
+            <li><strong>Permission errors:</strong> Check extension permissions in chrome://extensions/</li>
+        </ul>
+    </div>
+
+    <script>
+        function checkExtension() {
+            const statusDiv = document.getElementById('extension-status');
+            
+            // Check if we're on a Zomato page
+            const isZomato = window.location.href.includes('zomato.com');
+            
+            // Check if extension button exists
+            const button = document.getElementById('sentiment-analyze-btn');
+            const buttonPresent = button !== null;
+            
+            if (isZomato && buttonPresent) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Extension is working correctly!';
+            } else if (isZomato && !buttonPresent) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Extension button not found. Try refreshing the page.';
+            } else {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = 'ℹ️ Not on a Zomato page. Navigate to a Zomato restaurant page to test.';
+            }
+        }
+
+        function updateDebugInfo() {
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('is-zomato').textContent = window.location.href.includes('zomato.com') ? 'Yes' : 'No';
+            document.getElementById('button-present').textContent = document.getElementById('sentiment-analyze-btn') ? 'Yes' : 'No';
+        }
+
+        // Auto-update debug info
+        updateDebugInfo();
+        setInterval(updateDebugInfo, 2000);
+        
+        // Auto-check extension status
+        setTimeout(checkExtension, 1000);
+    </script>
+</body>
+</html> 

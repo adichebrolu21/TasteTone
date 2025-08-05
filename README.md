@@ -1,169 +1,154 @@
-# 🍽️ Zomato Review Sentiment Analyzer
+# Zomato Review Sentiment Analyzer
 
-A Chrome extension that performs sentiment analysis on Zomato restaurant reviews. The extension scrapes 5 random reviews from any Zomato restaurant page, analyzes their sentiment, and provides detailed insights including average sentiment score, most positive and least positive reviews.
+A Chrome extension that analyzes the sentiment of restaurant reviews on Zomato.com using keyword-based sentiment analysis.
 
-## ✨ Features
+## Features
 
-- **Smart Review Scraping**: Automatically finds and extracts reviews from Zomato restaurant pages
-- **Sentiment Analysis**: Uses keyword-based sentiment analysis to score reviews
-- **Random Sampling**: Selects 5 random reviews from available reviews for analysis
-- **Comprehensive Results**: Shows average sentiment score, most positive and least positive reviews
-- **Beautiful UI**: Modern, responsive interface with gradient designs and smooth animations
-- **Dual Interface**: Works both as a popup extension and with on-page overlay display
+- 🔍 **Smart Review Detection**: Automatically finds and analyzes restaurant reviews on Zomato pages
+- 📊 **Sentiment Analysis**: Uses weighted keyword analysis to determine review sentiment
+- 🎯 **Visual Results**: Displays analysis results in a beautiful overlay on the page
+- 📱 **Popup Interface**: Clean popup interface for easy access and control
+- 🔄 **Dynamic Content Support**: Works with dynamically loaded content
 
-## 📊 Analysis Features
+## Installation
 
-- **Average Sentiment Score**: Calculates the overall sentiment across all analyzed reviews
-- **Sentiment Classification**: Categorizes reviews as Positive, Negative, or Neutral
-- **Review Highlights**: Identifies the most positive and least positive reviews
-- **Detailed Statistics**: Shows positive/negative word counts and individual review scores
-- **Visual Indicators**: Color-coded results with emojis for easy interpretation
+### Method 1: Load as Unpacked Extension
 
-## 🚀 Installation
+1. **Download the extension files** to a folder on your computer
+2. **Open Chrome** and go to `chrome://extensions/`
+3. **Enable Developer mode** (toggle in the top right)
+4. **Click "Load unpacked"** and select the folder containing the extension files
+5. **Pin the extension** to your toolbar for easy access
 
-### Method 1: Load as Unpacked Extension (Recommended)
+### Method 2: Manual Installation
 
-1. **Download the Extension Files**
-   - Download all the files from this repository to a folder on your computer
+1. Create a new folder called `zomato-sentiment-analyzer`
+2. Copy all the extension files into this folder:
+   - `manifest.json`
+   - `content.js`
+   - `background.js`
+   - `popup.html`
+   - `popup.js`
+   - `popup.css`
+   - `styles.css`
+3. Follow steps 2-5 from Method 1
 
-2. **Open Chrome Extensions Page**
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Or go to Chrome Menu → More Tools → Extensions
+## How to Use
 
-3. **Enable Developer Mode**
-   - Toggle the "Developer mode" switch in the top right corner
+### Using the Popup
+1. **Navigate to a Zomato restaurant page** (e.g., `https://www.zomato.com/restaurants/...`)
+2. **Click the extension icon** in your Chrome toolbar
+3. **Click "🔍 Analyze Reviews"** in the popup
+4. **View the results** showing sentiment analysis of the reviews
 
-4. **Load the Extension**
-   - Click "Load unpacked" button
-   - Select the folder containing the extension files
-   - The extension should now appear in your extensions list
+### Using the Page Button
+1. **Navigate to any Zomato page**
+2. **Look for the "🔍 Analyze Reviews" button** in the top-right corner
+3. **Click the button** to analyze reviews on the current page
+4. **View the results** in the overlay that appears
 
-5. **Pin the Extension** (Optional)
-   - Click the puzzle piece icon in Chrome's toolbar
-   - Find "Zomato Sentiment Analyzer" and click the pin icon
+## Testing the Extension
 
-## 📖 How to Use
+### Test 1: Basic Functionality
+1. Go to any Zomato restaurant page
+2. Click the extension icon
+3. Click "Analyze Reviews"
+4. You should see analysis results
 
-### Using the Extension Popup
+### Test 2: Page Button
+1. Go to any Zomato page
+2. Look for the floating "🔍 Analyze Reviews" button
+3. Click it to test the page-based analysis
 
-1. **Navigate to a Zomato Restaurant Page**
-   - Go to any restaurant page on Zomato (e.g., `https://www.zomato.com/restaurants/...`)
-   - Make sure the URL contains `/restaurants/`
+### Test 3: Error Handling
+1. Go to a non-Zomato page
+2. Click the extension icon
+3. You should see a message asking you to navigate to a Zomato page
 
-2. **Click the Extension Icon**
-   - Click the extension icon in your Chrome toolbar
-   - The popup will open with an "Analyze Reviews" button
-
-3. **Analyze Reviews**
-   - Click the "🔍 Analyze Reviews" button
-   - Wait for the analysis to complete
-   - View the results in the popup
-
-### Using the On-Page Button
-
-1. **Navigate to a Zomato Restaurant Page**
-   - The extension automatically adds an "🔍 Analyze Reviews" button to restaurant pages
-
-2. **Click the Analyze Button**
-   - Click the button that appears on the page
-   - Results will be displayed in an overlay on the page
-
-## 📋 File Structure
-
-```
-zomato-sentiment-analyzer/
-├── manifest.json          # Extension configuration
-├── content.js            # Content script for page interaction
-├── popup.html            # Popup interface
-├── popup.js              # Popup functionality
-├── popup.css             # Popup styling
-├── styles.css            # Content script styling
-├── background.js         # Background service worker
-└── README.md            # This file
-```
-
-## 🔧 Technical Details
-
-### Sentiment Analysis Algorithm
-
-The extension uses a keyword-based sentiment analysis approach:
-
-**Positive Keywords:**
-- good, great, excellent, amazing, wonderful, fantastic, delicious
-- tasty, yummy, outstanding, perfect, love, enjoy, satisfied
-- recommend, best, awesome, brilliant, superb, incredible
-
-**Negative Keywords:**
-- bad, terrible, awful, horrible, disgusting, worst, hate
-- disappointed, poor, mediocre, average, bland, cold
-- overcooked, undercooked, expensive, waste, avoid, never
-
-**Scoring Method:**
-- Score = (Positive Words / Total Words) - (Negative Words / Total Words)
-- Range: -1 to +1 (negative to positive)
-- Classification: > 0.1 = Positive, < -0.1 = Negative, else = Neutral
-
-### Review Scraping Strategy
-
-The extension uses multiple strategies to find reviews:
-
-1. **CSS Selectors**: Tries common review selectors like `[data-testid="review-item"]`
-2. **Class-based Search**: Looks for elements with "review" in their class names
-3. **Content Analysis**: Filters text elements that look like reviews based on:
-   - Length (50-500 characters)
-   - Keywords (food, service, restaurant, good, bad, great)
-
-## 🎨 UI Features
-
-- **Modern Design**: Gradient backgrounds and smooth animations
-- **Responsive Layout**: Works on different screen sizes
-- **Color Coding**: Green for positive, red for negative, gray for neutral
-- **Emoji Indicators**: Visual sentiment indicators
-- **Smooth Interactions**: Hover effects and transitions
-
-## 🔒 Privacy & Security
-
-- **No Data Collection**: The extension doesn't collect or store any user data
-- **Local Processing**: All sentiment analysis happens locally in your browser
-- **No External APIs**: No data is sent to external services
-- **Open Source**: Full transparency of all code and functionality
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Extension Not Working?
 
-1. **Check URL**: Make sure you're on a Zomato restaurant page (URL contains `/restaurants/`)
-2. **Reload Page**: Try refreshing the page after installing the extension
-3. **Check Console**: Open Developer Tools (F12) and check for any error messages
-4. **Reinstall**: Try removing and reinstalling the extension
+1. **Check the console** (F12 → Console tab) for error messages
+2. **Reload the extension**:
+   - Go to `chrome://extensions/`
+   - Find your extension and click the refresh icon
+3. **Refresh the Zomato page** after reloading the extension
+4. **Check permissions**:
+   - Go to `chrome://extensions/`
+   - Click "Details" on your extension
+   - Ensure all permissions are granted
 
 ### No Reviews Found?
 
-1. **Scroll Down**: Some reviews might be loaded dynamically as you scroll
-2. **Wait for Loading**: Give the page time to fully load
-3. **Different Restaurant**: Try a different restaurant page
-4. **Check Page Structure**: The extension might need updates for new Zomato layouts
+1. **Wait for the page to fully load** (reviews might be loaded dynamically)
+2. **Scroll down** on the restaurant page to load more reviews
+3. **Try refreshing the page** and then analyzing again
+4. **Check if you're on a restaurant page** with actual reviews
 
-## 🤝 Contributing
+### Button Not Appearing?
 
-Feel free to contribute to this project by:
+1. **Refresh the page** after installing the extension
+2. **Check the console** for any JavaScript errors
+3. **Ensure you're on a Zomato page** (URL contains `zomato.com`)
+4. **Try navigating to a different Zomato page**
 
-1. **Reporting Bugs**: Open an issue for any problems you encounter
-2. **Suggesting Features**: Propose new features or improvements
-3. **Code Contributions**: Submit pull requests with improvements
-4. **Documentation**: Help improve the README or add comments
+## Technical Details
 
-## 📄 License
+### Sentiment Analysis Algorithm
+- Uses weighted keyword matching
+- Positive words: excellent, amazing, delicious, love, etc.
+- Negative words: terrible, awful, hate, disgusting, etc.
+- Neutral words are ignored
+- Scores range from -1 (very negative) to +1 (very positive)
 
-This project is open source and available under the MIT License.
+### Review Detection
+- Searches for review-specific CSS selectors
+- Falls back to keyword-based text analysis
+- Filters out navigation, buttons, and hidden elements
+- Handles dynamically loaded content
 
-## 🙏 Acknowledgments
+### Browser Compatibility
+- Chrome 88+ (Manifest V3)
+- Requires `activeTab`, `scripting`, and `tabs` permissions
+- Works on all Zomato.com pages
 
-- Built for educational and personal use
-- Inspired by the need for quick restaurant review insights
-- Uses modern web technologies and Chrome Extension APIs
+## File Structure
 
----
+```
+zomato-sentiment-analyzer/
+├── manifest.json      # Extension configuration
+├── content.js         # Main content script (runs on Zomato pages)
+├── background.js      # Background service worker
+├── popup.html         # Popup interface HTML
+├── popup.js           # Popup interface logic
+├── popup.css          # Popup styling
+├── styles.css         # Content script styling
+└── README.md          # This file
+```
 
-**Note**: This extension is not affiliated with Zomato and is created for educational purposes. Please respect Zomato's terms of service when using this extension. 
+## Development
+
+### Making Changes
+1. Edit the files as needed
+2. Go to `chrome://extensions/`
+3. Click the refresh icon on your extension
+4. Refresh the Zomato page to test changes
+
+### Debugging
+- Open Chrome DevTools (F12)
+- Check the Console tab for extension logs
+- Look for messages starting with "ZOMATO SENTIMENT ANALYZER DEBUG"
+
+## Support
+
+If you encounter issues:
+1. Check the browser console for error messages
+2. Ensure all files are present and properly formatted
+3. Try reloading the extension and refreshing the page
+4. Verify you're on a Zomato restaurant page with reviews
+
+## License
+
+This extension is provided as-is for educational and personal use. 
  
